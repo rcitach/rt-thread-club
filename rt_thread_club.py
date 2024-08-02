@@ -6,6 +6,33 @@ import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
+
+def login_club(driver, user_name, pass_word):
+{
+    logging.info("Attempting to log in with username: %s", user_name)
+    driver.get("https://www.rt-thread.org/account/user/index.html?response_type=code&authorized=yes&scope=basic&state=1588816557615&client_id=30792375&redirect_uri=https://club.rt-thread.org/index/user/login.html")
+    
+    try:
+        element = driver.find_element(By.ID, 'username')
+        element.send_keys(user_name)
+        element = driver.find_element(By.ID, 'password')
+        element.send_keys(pass_word)
+        driver.find_element(By.ID, 'login').click()
+    except Exception as e:
+        logging.error("Error during login attempt: %s", str(e))
+        return False
+
+    time.sleep(10)
+
+    current_url = driver.current_url
+    if current_url != "https://club.rt-thread.org/":
+        logging.error("Username or password error, please check it. Login failed!")
+        return False
+
+    logging.info("Successfully logged in!")
+    return True
+}
+
 def login_in_club(user_name, pass_word):
     option = webdriver.ChromeOptions()
     option.add_argument('headless')
@@ -14,18 +41,16 @@ def login_in_club(user_name, pass_word):
     driver = webdriver.Chrome(options=option)
     driver.maximize_window()
     # login in
-    driver.get("https://www.rt-thread.org/account/user/index.html?response_type=code&authorized=yes&scope=basic&state=1588816557615&client_id=30792375&redirect_uri=https://club.rt-thread.org/index/user/login.html")
-    element = driver.find_element(by=By.ID,value='username')
-    element.send_keys(user_name)
-    element = driver.find_element(by=By.ID,value='password')
-    element.send_keys(pass_word)
-    driver.find_element(by=By.ID,value='login').click()
-    time.sleep(10)
-
-    current_url = driver.current_url
-    if current_url != "https://club.rt-thread.org/":
-        logging.error("username or password error, please check it, login in failed!");
+    for i in range(10):
+        if login_club(driver, user_name, pass_word):
+            break
+        else:
+            logging.info("Login attempt %d failed. Refreshing the page and retrying...", i + 1)
+            driver.refresh()
+    else:
+        logging.error("Failed to log in after 10 attempts.")
         sys.exit(1)
+
     try:
         element = driver.find_element(by=By.LINK_TEXT,value=u"立即签到")
     except Exception as e:
