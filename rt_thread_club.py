@@ -8,7 +8,6 @@ from selenium.webdriver.common.by import By
 
 
 def login_club(driver, user_name, pass_word):
-{
     logging.info("Attempting to log in with username: %s", user_name)
     driver.get("https://www.rt-thread.org/account/user/index.html?response_type=code&authorized=yes&scope=basic&state=1588816557615&client_id=30792375&redirect_uri=https://club.rt-thread.org/index/user/login.html")
     
@@ -31,7 +30,6 @@ def login_club(driver, user_name, pass_word):
 
     logging.info("Successfully logged in!")
     return True
-}
 
 def login_in_club(user_name, pass_word):
     option = webdriver.ChromeOptions()
