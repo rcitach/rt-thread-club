@@ -1,0 +1,34 @@
+name: Update Repositories
+
+on:
+  schedule:
+      - cron: '0 0 1 * *'
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - docs/**
+      - cmake/**
+      - scripts/**
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - docs/**
+      - cmake/**
+      - scripts/**
+
+jobs:
+  update-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Update timestamp
+        run: echo "Last updated: $(date)" > timestamp.txt
+      - name: Commit changes
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add timestamp.txt
+          git commit -m "Update timestamp"
+      - name: Push changes
+        run: git push

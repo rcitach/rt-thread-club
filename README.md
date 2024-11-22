@@ -10,8 +10,6 @@
 
   ![Snipaste_2020-08-31_11-26-44](figures/Snipaste_2020-08-31_11-26-44.png)
 
-  
-
 - 点击 Actions 创建工作流
 
 ![Snipaste_2020-08-31_11-31-00](figures/Snipaste_2020-08-31_11-31-00.png)
@@ -28,13 +26,9 @@
 
   ![Snipaste_2020-08-31_11-38-09](figures/Snipaste_2020-08-31_11-38-09.png)
 
-
-
 - 查看工作流的具体信息，点击一个工作流，`rt-thread club automatic check-in` 为例：
 
   ![Snipaste_2020-08-31_11-39-29](figures/Snipaste_2020-08-31_11-39-29.png)
-
-  
 
 - 点击 build，点击右边的小箭头就可以查看运行信息，可以看到已经成功签到。
 
@@ -45,4 +39,3 @@
 邮件服务会在签到完成后发送邮件到你的邮箱，效果图如下所示：
 
 ![Snipaste_2020-08-31_11-46-43](figures/Snipaste_2020-08-31_11-46-43.png)
-
