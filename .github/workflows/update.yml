@@ -25,6 +25,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Set up GitHub token
+        uses: actions/configure-aws-credentials@v1
+        with:
+          aws_access_key_id: ${{ secrets.PAT_TOKEN }}
+          aws_secret_access_key: ${{ secrets.PAT_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+
       - name: Set date
         run: echo "REPORT_DATE=$(date)" >> $GITHUB_ENV
 
@@ -33,15 +44,13 @@ jobs:
 
       - name: Commit changes
         run: |
-          git config user.name "GitHub Actions Bot"
-          git config user.email "actions@github.com"
           git add timestamp.txt
           git commit -m "Update timestamp" || echo "No changes to commit"
 
       - name: Push changes
         run: git push
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Send email
         uses: dawidd6/action-send-mail@master
