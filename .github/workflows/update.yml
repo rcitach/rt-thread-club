@@ -25,12 +25,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up GitHub token
-        uses: actions/configure-aws-credentials@v1
-        with:
-          aws_access_key_id: ${{ secrets.PAT_TOKEN }}
-          aws_secret_access_key: ${{ secrets.PAT_TOKEN }}
-
       - name: Configure Git
         run: |
           git config --global user.name "GitHub Actions Bot"
