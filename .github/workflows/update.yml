@@ -2,15 +2,17 @@ name: Update Repositories
 
 on:
   schedule:
-      - cron: '0 0 1 * *'
+    - cron: '0 0 1 * *' # 每月 1 日触发
   push:
-    branches: [ master ]
+    branches:
+      - master
     paths-ignore:
       - docs/**
       - cmake/**
       - scripts/**
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
     paths-ignore:
       - docs/**
       - cmake/**
@@ -22,13 +24,31 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
       - name: Update timestamp
         run: echo "Last updated: $(date)" > timestamp.txt
+
       - name: Commit changes
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add timestamp.txt
-          git commit -m "Update timestamp"
+          git commit -m "Update timestamp" || echo "No changes to commit"
+
       - name: Push changes
         run: git push
+
+      - name: Send email
+        uses: dawidd6/action-send-mail@master
+        with:
+          server_address: smtp.yeah.net
+          server_port: 25
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: 签到小助手提醒您 (${{env.REPORT_DATE}})
+          # 如果你想要发送纯文本邮件，请取消注释下一行，并注释掉 html_body 字段  
+          # body: ${{ env.CLUB_DAY_NUMBERS }}  
+          # 如果你想要发送 HTML 邮件，请确保 html_body 包含有效的 HTML 内容  
+          html_body: "<html><body><p>签到小助手提醒您：当前仓库timestamp.txt文件更新成功</p></body></html>"
+          to: ${{ secrets.EMAIL }}
+          from: GitHub Actions
