@@ -44,7 +44,7 @@ jobs:
       - name: Push changes
         run: git push
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Send email
         uses: dawidd6/action-send-mail@master
@@ -69,4 +69,5 @@ jobs:
               </body>
             </html>
           to: ${{ secrets.EMAIL }}
-          from: bot@yourdomain.com
+          from: GitHub Actions
+
