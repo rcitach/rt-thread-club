@@ -62,4 +62,4 @@ jobs:
         html_body: "<html><body><p>签到小助手提醒您：${{ env.CLUB_DAY_NUMBERS }}</p></body></html>"
         to: ${{ secrets.EMAIL }}
         from: GitHub Actions
-        attachments: /home/runner/paihang.png
+        attachments: /home/runner/redirect_error.png

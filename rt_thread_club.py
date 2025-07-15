@@ -60,7 +60,7 @@ def login_club(driver, user_name, pass_word):
         WebDriverWait(driver, 10).until(EC.url_contains("club.rt-thread.org"))
     except Exception as e:
         logging.error("Redirect click error: %s", e)
-        driver.save_screenshot("redirect_error.png")
+        driver.save_screenshot("/home/runner/redirect_error.png")
         return False
 
     logging.info("Successfully logged in! Current URL: %s", driver.current_url)
