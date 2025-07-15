@@ -6,11 +6,26 @@ import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
+LOGIN_URL = ("https://www.rt-thread.org/account/user/index.html"
+             "?response_type=code&authorized=yes&scope=basic&state=1588816557615"
+             "&client_id=30792375&redirect_uri=https://club.rt-thread.org/index/user/login.html")
+
+def safe_get(driver, url, retries=3, wait_sec=3):
+    for i in range(retries):
+        try:
+            logging.info(f"Trying to get URL (attempt {i + 1}): {url}")
+            driver.get(url)
+            return True
+        except WebDriverException as e:
+            logging.warning("Failed to load page: %s", e)
+            time.sleep(wait_sec)
+    return False
 
 def login_club(driver, user_name, pass_word):
     logging.info("Attempting to log in with username: %s", user_name)
-    driver.get("https://www.rt-thread.org/account/user/index.html?response_type=code&authorized=yes&scope=basic&state=1588816557615&client_id=30792375&redirect_uri=https://club.rt-thread.org/index/user/login.html")
-    
+    if not safe_get(driver, LOGIN_URL, retries=3):
+        logging.error("Failed to load login page.")
+        return False    
     try:
         element = driver.find_element(By.ID, 'username')
         element.send_keys(user_name)
