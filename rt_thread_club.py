@@ -59,7 +59,25 @@ def login_club(driver, user_name, pass_word):
         link.click()
         WebDriverWait(driver, 10).until(EC.url_contains("club.rt-thread.org"))
     except Exception as e:
-        logging.error("Redirect click error: %s", e)
+        # logging.error("Redirect click error: %s", e)
+        elements = driver.find_elements(By.CSS_SELECTOR, "*")
+
+        for el in elements:
+            try:
+                tag = el.tag_name
+                text = el.text.strip().replace('\n', ' ')
+                attrs = driver.execute_script("""
+                    var items = {}; 
+                    for (var i = 0; i < arguments[0].attributes.length; i++) {
+                        items[arguments[0].attributes[i].name] = arguments[0].attributes[i].value;
+                    }
+                    return items;
+                """, el)
+                print(f"<{tag}>, text: {text}, attrs: {attrs}")
+            except Exception:
+                # 元素可能已变动或不可访问，忽略异常继续
+                continue
+
         driver.save_screenshot("/home/runner/redirect_error.png")
         return False
 
