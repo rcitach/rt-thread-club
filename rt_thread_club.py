@@ -25,6 +25,32 @@ def safe_get(driver, url, retries=3, wait_sec=3):
             time.sleep(wait_sec)
     return False
 
+def bypass_human_check(driver):
+    try:
+        # 判断是否存在 id 为 'sl-box' 的元素
+        sl_box = driver.find_element(By.ID, "sl-box")
+        if "Confirm You Are Human" in sl_box.text:
+            print("检测到人机验证提示，尝试点击 Confirm 按钮...")
+
+            # 点击 id 为 'sl-animation' 的确认按钮
+            confirm_btn = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.ID, "sl-animation"))
+            )
+            confirm_btn.click()
+            print("Confirm 按钮已点击，等待验证结束...")
+
+            # 等待验证页面消失
+            WebDriverWait(driver, 10).until_not(
+                EC.presence_of_element_located((By.ID, "sl-box"))
+            )
+
+        else:
+            print("未检测到人机验证提示，继续流程。")
+
+    except Exception as e:
+        print("处理人机验证时出错:", e)
+        driver.save_screenshot("/home/runner/human_check_error.png")
+
 def login_club(driver, user_name, pass_word):
     logging.info("Attempting to log in with username: %s", user_name)
 
@@ -47,6 +73,7 @@ def login_club(driver, user_name, pass_word):
         driver.save_screenshot("login_error.png")
         return False
 
+    bypass_human_check(driver)
     # 点击授权跳转
     try:
         link = WebDriverWait(driver, 10).until(
