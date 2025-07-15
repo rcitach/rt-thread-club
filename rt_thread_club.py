@@ -39,6 +39,7 @@ def login_club(driver, user_name, pass_word):
     time.sleep(10)
 
     current_url = driver.current_url
+    print(current_url)
     if current_url != "https://club.rt-thread.org/":
         logging.error("Username or password error, please check it. Login failed!")
         return False
