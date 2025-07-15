@@ -44,7 +44,7 @@ jobs:
         CLUB_USERNAME: ${{ secrets.USERNAME }}
         CLUB_PASSWORD: ${{ secrets.PASSWORD }}
       run: |
-        python actions.py
+        python rt_thread_club.py
         echo "CLUB_DAY_NUMBERS=$(cat sign_in_days.txt)" >> $GITHUB_ENV
     - name: 'Get Date'
       run: echo "REPORT_DATE=$(TZ=':Asia/Shanghai' date '+%Y-%m-%d %T')" >> $GITHUB_ENV
