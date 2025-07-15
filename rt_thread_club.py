@@ -36,10 +36,13 @@ def login_club(driver, user_name, pass_word):
         logging.error("Error during login attempt: %s", str(e))
         return False
 
-    time.sleep(10)
-
     current_url = driver.current_url
     print(current_url)
+
+    time.sleep(10)
+    current_url = driver.current_url
+    print(current_url)
+
     if current_url != "https://club.rt-thread.org/":
         logging.error("Username or password error, please check it. Login failed!")
         return False
@@ -55,14 +58,14 @@ def login_in_club(user_name, pass_word):
     driver = webdriver.Chrome(options=option)
     driver.maximize_window()
     # login in
-    for i in range(10):
+    for i in range(5):
         if login_club(driver, user_name, pass_word):
             break
         else:
             logging.info("Login attempt %d failed. Refreshing the page and retrying...", i + 1)
             driver.refresh()
     else:
-        logging.error("Failed to log in after 10 attempts.")
+        logging.error("Failed to log in after 5 attempts.")
         sys.exit(1)
 
     try:
