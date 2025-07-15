@@ -36,15 +36,24 @@ def login_club(driver, user_name, pass_word):
         logging.error("Error during login attempt: %s", str(e))
         return False
 
-    current_url = driver.current_url
-    logging.info(current_url)
+    time.sleep(2)
+    try:
+        link = driver.find_element(By.CSS_SELECTOR, 'a.btn.btn-primary')
+        href = link.get_attribute("href")
 
-    time.sleep(10)
-    current_url = driver.current_url
-    logging.info(current_url)
+        if not href or not href.startswith("https://club.rt-thread.org"):
+            logging.error("Login redirect URL not matched. Login failed!")
+            return False
 
-    if current_url != "https://club.rt-thread.org/":
-        logging.error("Username or password error, please check it. Login failed!")
+        link.click()
+        time.sleep(2)
+
+        current_url = driver.current_url
+        if not current_url.startswith("https://club.rt-thread.org"):
+            logging.error("Redirect failed or login unsuccessful. Current URL: %s", current_url)
+            return False
+    except Exception as e:
+        logging.exception("Exception during login flow: %s", e)
         return False
 
     logging.info("Successfully logged in!")
