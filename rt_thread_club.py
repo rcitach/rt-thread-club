@@ -2,11 +2,13 @@
 import os
 import time
 import logging
+import random
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
 
 LOGIN_URL = ("https://www.rt-thread.org/account/user/index.html"
              "?response_type=code&authorized=yes&scope=basic&state=1588816557615"
@@ -19,37 +21,107 @@ def safe_get(driver, url, retries=3, wait_sec=3):
         try:
             logging.info(f"Trying to get URL (attempt {i + 1}): {url}")
             driver.get(url)
+            time.sleep(random.uniform(1, 2))  # 随机延迟模拟人类行为
             return True
         except WebDriverException as e:
             logging.warning("Failed to load page: %s", e)
             time.sleep(wait_sec)
     return False
 
-def bypass_human_check(driver):
+def simulate_human_behavior(driver):
+    """模拟人类行为：鼠标移动、滚动等"""
     try:
-        # 判断是否存在 id 为 'sl-box' 的元素
+        # 随机鼠标移动
+        actions = ActionChains(driver)
+        actions.move_by_offset(random.randint(50, 200), random.randint(50, 200)).perform()
+        time.sleep(random.uniform(0.5, 1.5))
+        
+        # 随机滚动页面
+        driver.execute_script("window.scrollBy(0, " + str(random.randint(100, 500)) + ");")
+        time.sleep(random.uniform(0.3, 1))
+        
+        # 模拟鼠标悬停在某个元素上
+        try:
+            element = driver.find_element(By.TAG_NAME, "body")
+            actions.move_to_element(element).perform()
+        except:
+            logging.warning("No element found for hover simulation")
+    except Exception as e:
+        logging.warning("Error in simulating human behavior: %s", e)
+
+def handle_sliding_verification(driver):
+    """处理可能的滑动验证"""
+    try:
+        slider = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "sl-slider"))
+        )
+        logging.info("Detected sliding verification, attempting to slide...")
+        
+        actions = ActionChains(driver)
+        actions.click_and_hold(slider).perform()
+        time.sleep(random.uniform(0.2, 0.5))
+        
+        # 模拟人类滑动轨迹
+        for x in range(0, 200, 5):  # 假设滑动距离为200像素
+            actions.move_by_offset(5, random.randint(-2, 2)).perform()
+            time.sleep(random.uniform(0.01, 0.05))
+        actions.release().perform()
+        logging.info("Sliding completed, waiting for verification...")
+        
+        # 等待验证结果
+        WebDriverWait(driver, 10).until_not(
+            EC.presence_of_element_located((By.CLASS_NAME, "sl-slider"))
+        )
+        logging.info("Sliding verification passed")
+        return True
+    except TimeoutException:
+        logging.info("No sliding verification detected")
+        return False
+    except Exception as e:
+        logging.error("Error in sliding verification: %s", e)
+        return False
+
+def bypass_human_check(driver):
+    """处理 SafeLine WAF 人机验证"""
+    try:
+        # 模拟人类行为
+        simulate_human_behavior(driver)
+        
+        # 检查是否存在人机验证
+        WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.ID, "sl-box"))
+        )
         sl_box = driver.find_element(By.ID, "sl-box")
         if "Confirm You Are Human" in sl_box.text:
-            print("检测到人机验证提示，尝试点击 Confirm 按钮...")
+            logging.info("Detected human verification prompt, attempting to bypass...")
 
-            # 点击 id 为 'sl-animation' 的确认按钮
+            # 尝试处理滑动验证
+            if handle_sliding_verification(driver):
+                return True
+
+            # 尝试点击确认按钮
             confirm_btn = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.ID, "sl-animation"))
+                EC.element_to_be_clickable((By.ID, "sl-check"))
             )
             confirm_btn.click()
-            print("Confirm 按钮已点击，等待验证结束...")
+            logging.info("Confirm button clicked, waiting for verification to complete...")
 
             # 等待验证页面消失
-            WebDriverWait(driver, 10).until_not(
+            WebDriverWait(driver, 15).until_not(
                 EC.presence_of_element_located((By.ID, "sl-box"))
             )
-
+            logging.info("Human verification passed")
+            return True
         else:
-            print("未检测到人机验证提示，继续流程。")
-
+            logging.info("No human verification prompt detected")
+            return True
+    except TimeoutException:
+        logging.info("No human verification detected or already passed")
+        return True
     except Exception as e:
-        print("处理人机验证时出错:", e)
+        logging.error("Error in human verification: %s", e)
         driver.save_screenshot("/home/runner/human_check_error.png")
+        return False
 
 def login_club(driver, user_name, pass_word):
     logging.info("Attempting to log in with username: %s", user_name)
@@ -58,58 +130,51 @@ def login_club(driver, user_name, pass_word):
         logging.error("Failed to load login page.")
         return False
 
+    # 处理人机验证
+    if not bypass_human_check(driver):
+        logging.error("Failed to bypass human verification")
+        return False
+
     try:
+        # 输入用户名和密码
         WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.ID, "username"))).send_keys(user_name)
         WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.ID, "password"))).send_keys(pass_word)
 
+        # 点击登录按钮
         login_btn = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, "login"))
         )
         login_btn.click()
         logging.info("Clicked login button")
 
+        # 再次检查人机验证（登录后可能触发）
+        if not bypass_human_check(driver):
+            logging.error("Failed to bypass human verification after login")
+            return False
+
+        # 点击授权跳转
+        try:
+            link = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "a.btn.btn-primary"))
+            )
+            href = link.get_attribute("href")
+            if not href.startswith("https://club.rt-thread.org"):
+                logging.error("Login redirect URL invalid: %s", href)
+                return False
+            link.click()
+            WebDriverWait(driver, 10).until(EC.url_contains("club.rt-thread.org"))
+            logging.info("Successfully redirected to club.rt-thread.org")
+        except Exception as e:
+            logging.error("Redirect click error: %s", e)
+            driver.save_screenshot("/home/runner/redirect_error.png")
+            return False
+
+        logging.info("Successfully logged in! Current URL: %s", driver.current_url)
+        return True
     except Exception as e:
         logging.error("Login error: %s", e)
-        driver.save_screenshot("login_error.png")
+        driver.save_screenshot("/home/runner/login_error.png")
         return False
-
-    bypass_human_check(driver)
-    # 点击授权跳转
-    try:
-        link = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "a.btn.btn-primary"))
-        )
-        href = link.get_attribute("href")
-        if not href.startswith("https://club.rt-thread.org"):
-            logging.error("Login redirect URL invalid: %s", href)
-            return False
-        link.click()
-        WebDriverWait(driver, 10).until(EC.url_contains("club.rt-thread.org"))
-    except Exception as e:
-        # logging.error("Redirect click error: %s", e)
-        elements = driver.find_elements(By.CSS_SELECTOR, "*")
-
-        for el in elements:
-            try:
-                tag = el.tag_name
-                text = el.text.strip().replace('\n', ' ')
-                attrs = driver.execute_script("""
-                    var items = {}; 
-                    for (var i = 0; i < arguments[0].attributes.length; i++) {
-                        items[arguments[0].attributes[i].name] = arguments[0].attributes[i].value;
-                    }
-                    return items;
-                """, el)
-                print(f"<{tag}>, text: {text}, attrs: {attrs}")
-            except Exception:
-                # 元素可能已变动或不可访问，忽略异常继续
-                continue
-
-        driver.save_screenshot("/home/runner/redirect_error.png")
-        return False
-
-    logging.info("Successfully logged in! Current URL: %s", driver.current_url)
-    return True
 
 def login_in_club(user_name, pass_word):
     chrome_options = webdriver.ChromeOptions()
@@ -117,6 +182,9 @@ def login_in_club(user_name, pass_word):
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,1080")
+    # 添加用户代理，模拟真实浏览器
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
+    
     driver = webdriver.Chrome(options=chrome_options)
 
     try:
@@ -125,7 +193,7 @@ def login_in_club(user_name, pass_word):
                 break
             logging.warning("Retry login: attempt %d", i + 1)
             driver.refresh()
-            time.sleep(2)
+            time.sleep(random.uniform(2, 4))
         else:
             logging.error("Login failed after 5 attempts.")
             return None
@@ -162,8 +230,6 @@ def login_in_club(user_name, pass_word):
         driver.quit()
 
 if __name__ == "__main__":
-
     username = os.environ["CLUB_USERNAME"]
     password = os.environ["CLUB_PASSWORD"]
-
     login_in_club(username, password)
