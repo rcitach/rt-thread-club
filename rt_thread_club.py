@@ -55,8 +55,8 @@ def login_club(driver, user_name, pass_word):
             EC.url_contains("https://club.rt-thread.org")
         )
     except Exception as e:
-        logging.debug("Current URL: %s", driver.current_url)
-        logging.debug("Page content (truncated): %s", driver.page_source[:1000])
+        logging.error("Current URL: %s", driver.current_url)
+        logging.error("Page content (truncated): %s", driver.page_source[:1000])
         return False
 
     logging.info("Successfully logged in! Current URL: %s", driver.current_url)
