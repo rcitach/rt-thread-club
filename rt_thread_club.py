@@ -41,7 +41,7 @@ def login_club(driver, user_name, pass_word):
 
     try:
         # 等待“立即跳转”按钮出现并点击
-        link = WebDriverWait(driver, 10).until(
+        link = WebDriverWait(driver, 20).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, "a.btn.btn-primary"))
         )
         href = link.get_attribute("href")
@@ -55,7 +55,6 @@ def login_club(driver, user_name, pass_word):
             EC.url_contains("https://club.rt-thread.org")
         )
     except Exception as e:
-        logging.exception("Exception during redirect/login flow: %s", e)
         logging.debug("Current URL: %s", driver.current_url)
         logging.debug("Page content (truncated): %s", driver.page_source[:1000])
         return False
